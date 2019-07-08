@@ -17,7 +17,7 @@ class BlueAdapter {
     this.blue_tooth_discovery = false;
     this.connect_ble = false;
     this.send_buffer_commands = []
-    this.auto_retry = _auto_retry
+    this.auto_retry = !!_auto_retry
 
     // 回包特殊通道
     this._cfwait = false

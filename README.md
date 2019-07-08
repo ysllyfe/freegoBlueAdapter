@@ -1,3 +1,10 @@
+## 版本更新说明
+
+### v1.1
+
+- 加入开门成功/失败的事件提示
+- 默认重连为自动连接。加入手动重试连接方法，接收到 `retry_connect` 事件后，调用 `reConnect` 方法
+
 ## 小程序JSSDK
 
 引用如下：
@@ -84,6 +91,7 @@ Page({
 | no_write_uuids | 无写入端口(系统错误) | 1.0 |
 | close_connection | 断开蓝牙连接 | 1.0 |
 | connect_success | 蓝牙连接成功（重要） | 1.0 |
+| retry_connect | 重新连接 | 1.0 |
 | open_success | 开门成功 | 1.1 |
 | open_error | 开门失败 | 1.1 |
 | open_verify_error | 开门校验失败 | 1.1 |
