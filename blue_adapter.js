@@ -17,7 +17,8 @@ class BlueAdapter {
     this.blue_tooth_discovery = false;
     this.connect_ble = false;
     this.send_buffer_commands = []
-    this.auto_retry = !!_auto_retry
+    this.auto_retry = _auto_retry
+    this.try_to_connect_ble = false
 
     // 回包特殊通道
     this._cfwait = false
@@ -127,6 +128,18 @@ class BlueAdapter {
         this._sendEvent('cannot_open_blue_tooth_adapter');
       }
     })
+    wx.onBluetoothAdapterStateChange((res) => {
+      var isDvailable = res.available; //蓝牙适配器是否可用
+      if (isDvailable) {
+        if(!this.try_to_connect_ble){
+          wx.removeStorageSync(this.param_id)
+          this.getBluetoothAdapterState();
+        }
+      } else {
+        wx.stopBluetoothDevicesDiscovery();
+        this.connect_callback && this.connect_callback('cannot_open_blue_tooth_adapter');
+      }
+    })
   }
 
   handleRetry(){
@@ -139,6 +152,7 @@ class BlueAdapter {
   }
 
   getBluetoothAdapterState() {
+    this.try_to_connect_ble = true
     wx.getBluetoothAdapterState({
       success: (res) => {
         var isDvailable = res.available; //蓝牙适配器是否可用
@@ -204,7 +218,6 @@ class BlueAdapter {
       deviceId: this.deviceId,
       success: (res) => {
         this.timeStamp = Math.floor(Date.now() / 1000);
-        this.connect_callback && this.connect_callback('connect_success');
         this.connect_ble = true;
         this.send_ble('B9');
         this.need_record();
@@ -250,21 +263,22 @@ class BlueAdapter {
             success: (res) => {
               res.characteristics.forEach((item) => {
                 if (item.properties.write == true) {
-                  console.log('service', service)
-                  console.log('item', item)
+                  DEBUG && console.log('service', service)
+                  DEBUG && console.log('item', item)
                   this.writeUuids.push({
                     server_id: service.uuid,
                     uuid: item.uuid
                   });
+                  this.writeUuids.length == 1 && this.connect_callback && this.connect_callback('connect_success');
                 }
                 if (item.properties.notify == true) {
-                  console.log('logs', '取得特征值，开始订阅notify... ...');
+                  DEBUG && console.log('logs', '取得特征值，开始订阅notify... ...');
                   this.notifyBle(service.uuid, item.uuid);
                 }
               })
             },
             fail: (res) => {
-              console.log('logs', JSON.stringify(res));
+              DEBUG && console.log('logs', JSON.stringify(res));
             }
           })
         })
