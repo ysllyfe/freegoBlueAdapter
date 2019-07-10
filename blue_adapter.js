@@ -50,7 +50,7 @@ class BlueAdapter {
     if (this.connect_ble == true && this.deviceId) {
       wx.closeBLEConnection({
         deviceId: this.deviceId,
-        success(res) {
+        success: (res) => {
           this._sendEvent('close_connection')
         }
       })
