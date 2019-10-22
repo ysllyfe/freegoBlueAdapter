@@ -6,8 +6,8 @@ const API_URL = "https://lock.wangjile.cn/api/locksdk/";
 class BlueAdapter {
   constructor(params_id, version, token, connect_callback, _auto_retry = true) {
     this.param_id = params_id
-    this.version  = version
-    this.token    = token
+    this.version = version
+    this.token = token
     this.connect_callback = connect_callback
 
     // 主要使用连接参数
@@ -34,11 +34,19 @@ class BlueAdapter {
   }
 
   openDoor() {
-    this.send_ble('B2');
+    if (this.version == 'm0001') {
+      this.send_ble('B2');
+    } else if (this.version == 'n0001') {
+      this.send_ble('BA', "02")
+    }
   }
 
   forceOpen() {
-    this.send_ble('B1');
+    if (this.version == 'm0001') {
+      this.send_ble('B1');
+    } else if (this.version == 'n0001') {
+      this.send_ble('BA', "01")
+    }
   }
 
   // 释放
@@ -104,14 +112,14 @@ class BlueAdapter {
         'content-type': 'application/json',
         'Authorization': this.token
       },
-      success: (res)=>{
-        if(res.data.error == 0){
+      success: (res) => {
+        if (res.data.error == 0) {
           this._sendEvent('send_command')
           DEBUG && console.log(res.data)
           DEBUG && console.log('logs', "待发送指令：" + res.data.command);
           this.send_buffer_commands = res.data.command.split(';');
           this._send_buffer()
-        }else{
+        } else {
           this._sendEvent("error_" + res.data.error)
         }
       }
@@ -131,7 +139,7 @@ class BlueAdapter {
     wx.onBluetoothAdapterStateChange((res) => {
       var isDvailable = res.available; //蓝牙适配器是否可用
       if (isDvailable) {
-        if(!this.try_to_connect_ble){
+        if (!this.try_to_connect_ble) {
           wx.removeStorageSync(this.param_id)
           this.getBluetoothAdapterState();
         }
@@ -142,11 +150,11 @@ class BlueAdapter {
     })
   }
 
-  handleRetry(){
+  handleRetry() {
     this.auto_retry = false
   }
 
-  reConnect(){
+  reConnect() {
     wx.removeStorageSync(this.param_id)
     this.connectBluetooth();
   }
@@ -159,7 +167,7 @@ class BlueAdapter {
         if (isDvailable) {
           let cached_deviceId = wx.getStorageSync(this.param_id)
           let time = wx.getStorageSync(this.param_id + "created_at")
-          if (cached_deviceId.length < 16 || time < Math.round(new Date().getTime()/1000) - (3600 * 24) ) {
+          if (cached_deviceId.length < 16 || time < Math.round(new Date().getTime() / 1000) - (3600 * 24)) {
             this.startBluetoothDevicesDiscovery();
           } else {
             this._sendEvent('use_cached_device_id')
@@ -200,7 +208,7 @@ class BlueAdapter {
           })
           wx.setStorage({
             key: this.param_id + "created_at",
-            data: Math.round(new Date().getTime()/1000)
+            data: Math.round(new Date().getTime() / 1000)
           })
           this.deviceId = device.deviceId
           this.blue_tooth_discovery = false;
@@ -325,7 +333,7 @@ class BlueAdapter {
         'Authorization': this.token
       },
       method: 'POST',
-      success: (res)=>{
+      success: (res) => {
         console.log(res.data)
       }
     })
@@ -334,7 +342,7 @@ class BlueAdapter {
   _dealWithV14(res) {
     let value = ab2hex(res.value);
     console.log('logs', `${res.characteristicId}收到回复${value}`)
-    if (value.slice(0,2) == 'cd' && value == 'cdeeeeeeee'){
+    if (value.slice(0, 2) == 'cd' && value == 'cdeeeeeeee') {
       this._cdwait = false
       this._cdpackage = 0
       this._cddata = []
@@ -382,26 +390,26 @@ class BlueAdapter {
 
   _dealWithV13(res) {
     let value = this._ab2hext(res.value);
-    if (value.slice(0,4) == 'b2ce'){
-      if(value.slice(12,14) == "01"){
+    if (value.slice(0, 4) == 'b2ce') {
+      if (value.slice(12, 14) == "01") {
         this.connect_callback && this.connect_callback('open_success')
-      }else if(value.slice(12,14)=='02'){
+      } else if (value.slice(12, 14) == '02') {
         this.connect_callback && this.connect_callback('open_error')
-      }else{
+      } else {
         this.connect_callback && this.connect_callback('open_verify_error')
       }
     }
-    if (value.slice(0,4) == 'b1ce'){
-      if(value.slice(12,14) == "01"){
+    if (value.slice(0, 4) == 'b1ce') {
+      if (value.slice(12, 14) == "01") {
         this.connect_callback && this.connect_callback('forceopen_success')
-      }else if(value.slice(12,14)=='02'){
+      } else if (value.slice(12, 14) == '02') {
         this.connect_callback && this.connect_callback('forceopen_error')
-      }else{
+      } else {
         this.connect_callback && this.connect_callback('forceopen_verify_error')
       }
     }
 
-    if (value.slice(0,2) == 'cd' && value == 'cdeeeeeeee'){
+    if (value.slice(0, 2) == 'cd' && value == 'cdeeeeeeee') {
       this._cdwait = false
       this._cdpackage = 0
       this._cddata = []
@@ -483,7 +491,7 @@ class BlueAdapter {
     }
   }
 
-  _sendEvent(code){
+  _sendEvent(code) {
     this.connect_callback && this.connect_callback(code);
   }
 
