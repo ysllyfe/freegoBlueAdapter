@@ -347,7 +347,7 @@ class BlueAdapter {
   }
 
   _dealWithV14(res) {
-    let value = ab2hex(res.value);
+    let value = this._ab2hext(res.value);
     console.log('logs', `${res.characteristicId}收到回复${value}`)
     if (value.slice(0, 2) == 'cd' && value == 'cdeeeeeeee') {
       this._cdwait = false
