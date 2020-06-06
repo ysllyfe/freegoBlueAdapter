@@ -31,12 +31,17 @@ class BlueAdapter {
     this._cdcharacteristicId = ""
     this.timeStamp = Math.floor(Date.now() / 1000);
 
+    this.n_force_open_door = false
+    this.n_open_door = false
+    this.ce_need_check = false
   }
 
   openDoor() {
     if (this.version == 'm0001') {
       this.send_ble('B2');
     } else if (this.version == 'n0001') {
+      this.n_open_door = true
+      this.ce_need_check = true
       this.send_ble('BA', "02")
     }
   }
@@ -45,6 +50,8 @@ class BlueAdapter {
     if (this.version == 'm0001') {
       this.send_ble('B1');
     } else if (this.version == 'n0001') {
+      this.n_force_open_door = true
+      this.ce_need_check = true
       this.send_ble('BA', "01")
     }
   }
@@ -350,6 +357,27 @@ class BlueAdapter {
       this._saveToDb(value);
       return
     }
+    if (value.slice(0, 2) == 'ce') {
+      let ce_res = value.slice(12, 14)
+      if (this.ce_need_check && this.connect_callback) {
+        if (ce_res == "01") {
+          this.n_open_door && this.connect_callback('open_success')
+          this.n_force_open_door && this.connect_callback('forceopen_success')
+        }
+        if (ce_res == "02") {
+          this.n_open_door && this.connect_callback('open_error')
+          this.n_force_open_door && this.connect_callback('forceopen_error')
+        }
+        if (ce_res == "ee" || ce_res == "ef") {
+          this.n_open_door && this.connect_callback('open_verify_error')
+          this.n_force_open_door && this.connect_callback('forceopen_verify_error')
+        }
+        this.n_force_open_door = false
+        this.n_open_door = false
+        this.ce_need_check = false
+      }
+    }
+
     if (this._cdwait == false && value.slice(0, 2) == 'cd') {
       //收到cd第一包
       this._cdwait = true
