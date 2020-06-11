@@ -67,6 +67,7 @@ class BlueAdapter {
         deviceId: this.deviceId,
         success: (res) => {
           this._sendEvent('close_connection')
+          wx.closeBluetoothAdapter()
         }
       })
     }
