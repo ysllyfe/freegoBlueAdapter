@@ -1,3 +1,9 @@
+# 特别注意
+
+本版本只支持旧的设备，兼容新旧设备请使用
+
+https://github.com/ysllyfe/freego_ble_wx_component
+
 ## 版本更新说明
 
 ### v1.1
